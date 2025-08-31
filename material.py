@@ -95,7 +95,7 @@ def validate_mermaid_syntax(content):
     
     return len(errors) == 0, errors
 
-def generate_materials(topic: str, teacher_id: str, output_format: str = 'pdf') -> Optional[str]:
+def generate_materials(study_system: StudyMaterialRAG,topic: str, teacher_id: str, output_format: str = 'pdf') -> Optional[str]:
     """
     Generate study materials for a given topic.
 
@@ -109,7 +109,7 @@ def generate_materials(topic: str, teacher_id: str, output_format: str = 'pdf') 
     """
     try:
         # Create RAG system instance
-        study_system = get_rag_system()
+        # study_system = get_rag_system()
 
         materials = study_system.create_full_course_materials(topic, teacher_id)
 

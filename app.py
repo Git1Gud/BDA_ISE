@@ -57,7 +57,7 @@ def main():
 
             try:
                 logger.info("Generating study materials...")
-                material = generate_materials(query, teacher_id="T1")
+                material = generate_materials(rag, query, teacher_id="T1", output_format='pdf')
                 logger.info("Material generation completed successfully")
             except Exception as e:
                 logger.error(f"Error generating materials: {e}")
