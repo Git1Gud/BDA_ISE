@@ -29,7 +29,6 @@ class StudyMaterialRAG(BaseRAGComponent):
 
         # Initialize components
         self.vector_manager = VectorStoreManager(config)
-        self.search_engine = SearchEngine(config, self.vector_manager)
         self.content_processor = ContentProcessor(config)
         self.material_generator = MaterialGenerator(config)
         self.file_manager = FileManager(config)
@@ -37,7 +36,14 @@ class StudyMaterialRAG(BaseRAGComponent):
         # Initialize LLM and vector stores
         self._setup_llm()
         self._setup_vector_stores()
+        self._setup_text_splitters()
         self._setup_prompts()
+
+        # Initialize search engine after vector stores are set up
+        self.search_engine = SearchEngine(config, self.vector_manager, {
+            'syllabus': self.syllabus_store,
+            'reference': self.reference_store
+        })
 
         self._log_operation("RAG system initialized")
 
@@ -100,6 +106,20 @@ class StudyMaterialRAG(BaseRAGComponent):
                 api_key=self.config.qdrant_api_key,
                 embedding=self.vector_manager.embeddings
             )
+
+    def _setup_text_splitters(self):
+        """Initialize text splitters for content processing."""
+        self.syllabus_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.config.syllabus_chunk_size,
+            chunk_overlap=self.config.chunk_overlap,
+            length_function=len
+        )
+
+        self.reference_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.config.reference_chunk_size,
+            chunk_overlap=self.config.chunk_overlap,
+            length_function=len
+        )
 
     def _setup_prompts(self):
         """Initialize prompt templates."""
@@ -256,3 +276,112 @@ class StudyMaterialRAG(BaseRAGComponent):
                 materials[topic.title] = f"# {topic.title}\n\nError generating content: {str(e)}"
 
         return materials
+
+    def add_syllabus_content(self, syllabus_text: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+        """Add syllabus content to the vector store and sparse index."""
+        try:
+            # Preprocess syllabus
+            processed_syllabus = self._preprocess_syllabus(syllabus_text)
+
+            # Extract and store topics
+            self._extract_and_store_topics(processed_syllabus, metadata or {})
+
+            self._log_operation("Syllabus content added", f"length: {len(processed_syllabus)}")
+        except Exception as e:
+            self._log_error("Adding syllabus content", e)
+
+    def add_reference_content(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+        """Add reference content to the vector store and sparse index."""
+        try:
+            # Split content into chunks
+            chunks = self.reference_splitter.split_text(content)
+
+            # Add to vector store
+            metadatas = [metadata or {}] * len(chunks)
+            self.reference_store.add_texts(chunks, metadatas=metadatas)
+
+            # Add to sparse corpus
+            for i, chunk in enumerate(chunks):
+                self.search_engine._reference_corpus.append({
+                    'content': chunk,
+                    'metadata': metadata or {}
+                })
+
+            # Rebuild sparse index
+            self.search_engine._rebuild_sparse_index('reference')
+
+            self._log_operation("Reference content added", f"chunks: {len(chunks)}")
+        except Exception as e:
+            self._log_error("Adding reference content", e)
+
+    def _preprocess_syllabus(self, syllabus_text: str) -> str:
+        """Preprocess syllabus content to make it more structured."""
+        from langchain.prompts import PromptTemplate
+
+        preprocess_prompt = PromptTemplate(
+            template="""Improve the following syllabus content by making it more structured, clear, and concise.
+            Ensure the content is well-organized and easy to understand.
+            Only add things which look MODULES. DO NOT ADD COURSE OUTCOME,LAB RELATED THINGS. Also just gives Modules and units please.
+
+            Original Syllabus:
+            {syllabus_content}
+
+            Improved Syllabus:""",
+            input_variables=["syllabus_content"]
+        )
+        chain = preprocess_prompt | self.llm
+        result = chain.invoke({"syllabus_content": syllabus_text})
+
+        try:
+            improved_syllabus = result.content
+            self._log_operation("Syllabus preprocessing", "completed")
+            return improved_syllabus
+        except Exception as e:
+            self._log_error("Syllabus preprocessing", e)
+            return syllabus_text
+
+    def _extract_and_store_topics(self, combined_syllabus: str, metadata: Dict[str, Any]) -> None:
+        """Extract topics from syllabus and store them in the vector store."""
+        from langchain.output_parsers import PydanticOutputParser
+
+        parser = PydanticOutputParser(pydantic_object=Topics)
+        chain = self.topic_extraction_prompt | self.llm
+
+        result = chain.invoke({"syllabus_content": combined_syllabus})
+
+        try:
+            topics_container = parser.parse(result.content)
+            topics = topics_container.topics
+
+            topic_texts = [
+                f"Module: {topic.module_number or 'N/A'}\nUnit: {topic.unit_number or 'N/A'}\nTitle: {topic.title}\nDescription: {topic.description}\nSubtopics: {', '.join(topic.subtopics or [])}"
+                for topic in topics
+            ]
+
+            # Add topics to vector store
+            topic_metadatas = []
+            for topic in topics:
+                topic_metadata = metadata.copy()
+                topic_metadata.update({
+                    'module_number': topic.module_number,
+                    'unit_number': topic.unit_number,
+                    'title': topic.title,
+                    'subtopics': topic.subtopics
+                })
+                topic_metadatas.append(topic_metadata)
+
+            self.syllabus_store.add_texts(topic_texts, metadatas=topic_metadatas)
+
+            # Add to sparse corpus
+            for i, topic_text in enumerate(topic_texts):
+                self.search_engine._syllabus_corpus.append({
+                    'content': topic_text,
+                    'metadata': topic_metadatas[i]
+                })
+
+            # Rebuild sparse index
+            self.search_engine._rebuild_sparse_index('syllabus')
+
+            self._log_operation("Topics extracted and stored", f"count: {len(topics)}")
+        except Exception as e:
+            self._log_error("Topic extraction and storage", e)

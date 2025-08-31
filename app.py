@@ -19,7 +19,7 @@ def main():
         rag = StudyMaterialRAG(config)
         logger.info("RAG system initialized successfully")
 
-        # Sample syllabus for testing
+        # Add syllabus content for testing
         syllabus = """
         1 Title Introduction to Distributed Systems
         1.1 Definition, Goals, Types of Distributed Computing Models, Issues in
@@ -29,6 +29,10 @@ def main():
         Positioning Middleware, Models of Middleware, Services offered by
         Middleware.
         """
+
+        logger.info("Adding syllabus content...")
+        rag.add_syllabus_content(syllabus, {"course": "Distributed Systems", "source": "test"})
+        logger.info("Syllabus content added successfully")
 
         # Test query
         query = "unit 1.2"

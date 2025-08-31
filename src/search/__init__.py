@@ -54,9 +54,10 @@ class VectorStoreManager(BaseRAGComponent):
 class SearchEngine(BaseRAGComponent):
     """Handles search operations across different collections."""
 
-    def __init__(self, config: RAGConfig, vector_manager: VectorStoreManager):
+    def __init__(self, config: RAGConfig, vector_manager: VectorStoreManager, vector_stores: Optional[Dict[str, Any]] = None):
         super().__init__(config)
         self.vector_manager = vector_manager
+        self._vector_stores = vector_stores or {}
         self._syllabus_corpus: List[Dict[str, Any]] = []
         self._reference_corpus: List[Dict[str, Any]] = []
 
@@ -146,6 +147,15 @@ class SearchEngine(BaseRAGComponent):
 
     def _dense_search(self, collection: str, query: str, k: int):
         """Perform dense search using vector similarity."""
-        # This would need to be implemented with actual vector store
-        # For now, return empty list
+        # Get the vector store from the RAG system
+        if hasattr(self, '_vector_stores'):
+            store = self._vector_stores.get(collection)
+            if store:
+                try:
+                    # Use similarity search to get documents
+                    docs = store.similarity_search(query, k=k)
+                    return docs
+                except Exception as e:
+                    self._log_error("Dense search", f"Failed for {collection}: {e}")
+                    return []
         return []
