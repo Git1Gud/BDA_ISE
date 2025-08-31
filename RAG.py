@@ -3,6 +3,7 @@ import hashlib
 from dataclasses import dataclass
 from typing import Optional, List, Dict, Any, Tuple
 import os
+import time
 
 # LangChain imports
 from langchain_groq import ChatGroq
@@ -204,6 +205,7 @@ class StudyMaterialRAG:
         return [(int(i), float(sims[i])) for i in idxs]
 
     def _dense_search(self, collection: str, query: str, k: int):
+        time.sleep(3)  # Wait 3 seconds before dense search invocation
         store = self.syllabus_store if collection == 'syllabus' else self.reference_store
         try:
             # Use with scores to preserve order deterministically
@@ -304,6 +306,7 @@ class StudyMaterialRAG:
             input_variables=["syllabus_content"]
         )
         chain = preprocess_prompt | self.llm
+        time.sleep(3)
         result = chain.invoke({"syllabus_content": syllabus_text})
 
         try:
@@ -316,6 +319,8 @@ class StudyMaterialRAG:
 
     def _extract_and_store_topics(self, combined_syllabus: str, metadata: Dict[str, Any]) -> None:
         """Extract topics from syllabus and store them in the vector store."""
+        time.sleep(3)  # Wait 3 seconds before topic extraction invocation
+        
         parser = PydanticOutputParser(pydantic_object=Topics)
         chain = self.topic_extraction_prompt | self.llm
 
@@ -355,6 +360,8 @@ class StudyMaterialRAG:
             syllabus_text: Text content of the syllabus
             metadata: Metadata for the syllabus (course name, teacher ID, etc.)
         """
+        time.sleep(3)  # Wait 3 seconds before syllabus processing invocation
+        
         if not metadata:
             metadata = {}
 
@@ -388,6 +395,7 @@ class StudyMaterialRAG:
             reference_text: Text content of the reference material
             metadata: Metadata for the reference (source, author, teacher ID, etc.)
         """
+        time.sleep(3)  # Wait 3 seconds before reference material processing invocation
         texts = self.reference_splitter.split_text(reference_text)
 
         if not metadata:
@@ -447,7 +455,7 @@ class StudyMaterialRAG:
         """Extract topics from syllabus content using LLM."""
         parser = PydanticOutputParser(pydantic_object=Topics)
         chain = self.topic_extraction_prompt | self.llm
-
+        time.sleep(3)
         result = chain.invoke({"syllabus_content": syllabus_content})
 
         try:
@@ -473,6 +481,7 @@ class StudyMaterialRAG:
         Returns:
             Marp-compatible markdown for the study material
         """
+        time.sleep(3)  # Wait 3 seconds before study material generation invocation
         # Prepare search query
         processed_query = self._prepare_search_query(topic, query)
         logger.debug(f"Processed query: {processed_query}")
@@ -502,8 +511,10 @@ class StudyMaterialRAG:
 
     def _generate_material_with_llm(self, topic: Topic, query: str, reference_content: str, teacher_id: str) -> str:
         """Generate study material using LLM with proper error handling."""
+        time.sleep(3)  # Wait 3 seconds before LLM invocation
+        
         chain = self.study_material_prompt | self.llm
-
+        
         try:
             result = chain.invoke({
                 "topic": query,

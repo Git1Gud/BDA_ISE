@@ -2,6 +2,7 @@
 Main RAG system that orchestrates all components.
 """
 
+import time
 from typing import List, Dict, Any, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_qdrant import QdrantVectorStore
@@ -195,6 +196,7 @@ class StudyMaterialRAG(BaseRAGComponent):
 
     def generate_study_material(self, topic: Topic, query: str, teacher_id: str = "Unknown") -> str:
         """Generate study material for a specific topic."""
+        time.sleep(3)  # Wait 3 seconds before study material generation invocation
         # Prepare search query
         processed_query = self._prepare_search_query(topic, query)
         self.logger.debug(f"Processed query: {processed_query}")

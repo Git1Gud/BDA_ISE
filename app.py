@@ -4,6 +4,7 @@ import sys
 from material import generate_materials
 from prompts import Topic
 from logger import logger
+import time
 
 def main():
     """Main application entry point."""
