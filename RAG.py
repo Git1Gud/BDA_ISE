@@ -66,7 +66,7 @@ class StudyMaterialRAG:
     def _setup_components(self) -> None:
         """Initialize all RAG components."""
         self.llm = ChatGoogleGenerativeAI(
-            model='gemini-2.5-flash',
+            model='gemini-2.5-pro',
             temperature=0,
             max_tokens=None,
             timeout=None,

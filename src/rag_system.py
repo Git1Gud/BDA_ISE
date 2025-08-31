@@ -52,14 +52,14 @@ class StudyMaterialRAG(BaseRAGComponent):
         """Initialize the language model."""
         try:
             self.llm = ChatGoogleGenerativeAI(
-                model='gemini-2.5-flash',
+                model='gemini-2.5-pro',
                 temperature=0,
                 max_tokens=None,
                 timeout=None,
                 max_retries=2,
                 api_key=self.config.gemini_api_key,
             )
-            self._log_operation("LLM initialized", "gemini-2.5-flash")
+            self._log_operation("LLM initialized", "gemini-2.5-pro")
         except Exception as e:
             self._log_error("LLM initialization", e)
             raise

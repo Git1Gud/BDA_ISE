@@ -167,18 +167,31 @@ with tab1:
                         
                         pdf_path = output_path.replace('.md', '.pdf')
                         if os.path.exists(pdf_path):
+                            # Read PDF in binary mode and get the content
                             with open(pdf_path, "rb") as pdf_file:
-                                st.download_button(
-                                    label="Download Generated PDF",
-                                    data=pdf_file,
-                                    file_name=os.path.basename(pdf_path),
-                                    mime="application/pdf"
-                                )
-                        
-                        with open(output_path, "r", encoding="utf-8") as md_file:
+                                pdf_content = pdf_file.read()
+                            
+                            # Download button for PDF
                             st.download_button(
-                                label="Download Generated Markdown",
-                                data=md_file,
+                                label="📥 Download Generated PDF",
+                                data=pdf_content,
+                                file_name=os.path.basename(pdf_path),
+                                mime="application/pdf"
+                            )
+                            
+                            # PDF preview using base64 encoding
+                            import base64
+                            base64_pdf = base64.b64encode(pdf_content).decode('utf-8')
+                            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="600" type="application/pdf"></iframe>'
+                            st.markdown("### 📖 PDF Preview:")
+                            st.markdown(pdf_display, unsafe_allow_html=True)
+                        
+                        # Markdown download (only if PDF generation failed)
+                        with open(output_path, "r", encoding="utf-8") as md_file:
+                            md_content = md_file.read()
+                            st.download_button(
+                                label="📝 Download Generated Markdown",
+                                data=md_content,
                                 file_name=os.path.basename(output_path),
                                 mime="text/markdown"
                             )
