@@ -87,7 +87,8 @@ class StudyMaterialRAG(BaseRAGComponent):
                 self.reference_store = QdrantVectorStore(
                     client=self.qdrant_client,
                     collection_name=self.config.reference_collection,
-                    embedding=self.vector_manager.embeddings
+                    embedding=self.vector_manager.embeddings,
+                    timeout=120  # Increased timeout for larger reference files
                 )
             else:
                 raise ValueError("No Qdrant client; will fallback to from_existing_collection")
@@ -214,7 +215,7 @@ class StudyMaterialRAG(BaseRAGComponent):
 
     def _get_reference_content(self, processed_query: str) -> str:
         """Retrieve relevant reference content."""
-        results = self.hybrid_search('reference', processed_query, k_dense=5, k_sparse=12, k_final=5)
+        results = self.hybrid_search('reference', processed_query, k_dense=15, k_sparse=30, k_final=15)
         return "\n\n".join([doc.page_content for doc in results]) if results else ""
 
     def _create_empty_material_response(self, topic_title: str) -> str:
