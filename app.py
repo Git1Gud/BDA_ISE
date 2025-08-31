@@ -17,7 +17,7 @@ def main():
     Middleware.
     """
     # Add syllabus to the system
-    rag.add_syllabus(syllabus, {"course_id": "C1", "teacher_id": "T1"})
+    # rag.add_syllabus(syllabus, {"course_id": "C1", "teacher_id": "T1"})
 
     # Add multiple reference documents to stress-test hybrid retrieval
     reference_corpus = [
@@ -62,27 +62,27 @@ def main():
         cluster autoscaler interacts with cloud APIs; vertical pod autoscaler adjusts resource requests over time.
         """,
     ]
-    for idx, ref_text in enumerate(reference_corpus, start=1):
-        rag.add_reference_material(ref_text, {"source": f"RefDoc{idx}", "teacher_id": "T1"})
+    # for idx, ref_text in enumerate(reference_corpus, start=1):
+    #     rag.add_reference_material(ref_text, {"source": f"RefDoc{idx}", "teacher_id": "T1"})
 
     # Test different query types
-    test_queries = ["module 1", "unit 1.2", "1.1", "middleware"]
+    # test_queries = ["module 1", "unit 1.2", "1.1", "middleware"]
     
-    for query in test_queries:
-        print(f"\n=== Testing query: {query} ===")
-        query_type, module_number, unit_number = rag._parse_query_type(query)
-        print(f"Parsed as: type={query_type}, module={module_number}, unit={unit_number}")
+    # for query in test_queries:
+    #     print(f"\n=== Testing query: {query} ===")
+    #     query_type, module_number, unit_number = rag._parse_query_type(query)
+    #     print(f"Parsed as: type={query_type}, module={module_number}, unit={unit_number}")
         
-        topics_model = rag.extract_topics(query)
-        if topics_model and topics_model.topics:
-            filtered_topics = rag._filter_topics_by_query(
-                topics_model.topics, query_type, module_number, unit_number
-            )
-            print(f"Found {len(filtered_topics)} matching topics:")
-            for topic in filtered_topics:
-                print(f"  - Module {topic.module_number}, Unit {topic.unit_number}: {topic.title}")
-        else:
-            print("No topics found")
+    #     topics_model = rag.extract_topics(query)
+    #     if topics_model and topics_model.topics:
+    #         filtered_topics = rag._filter_topics_by_query(
+    #             topics_model.topics, query_type, module_number, unit_number
+    #         )
+    #         print(f"Found {len(filtered_topics)} matching topics:")
+    #         for topic in filtered_topics:
+    #             print(f"  - Module {topic.module_number}, Unit {topic.unit_number}: {topic.title}")
+    #     else:
+    #         print("No topics found")
 
     # Use the original query for material generation
     query = "unit 1.2"

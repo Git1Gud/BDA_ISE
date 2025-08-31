@@ -1,0 +1,346 @@
+/* Dark theme for Marp presentations */
+.invert {
+  --color-background: #1a1a1a;
+  --color-foreground: #ffffff;
+  --color-background-code: #2d2d2d;
+  --color-foreground-code: #f8f8f2;
+  --color-background-paginate: #333333;
+  --color-foreground-paginate: #cccccc;
+}
+
+section {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #ffffff !important;
+}
+
+code {
+  background-color: #2d2d2d !important;
+  color: #f8f8f2 !important;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+pre {
+  background-color: #2d2d2d !important;
+  color: #f8f8f2 !important;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+blockquote {
+  border-left: 4px solid #007acc !important;
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+  padding: 8px 12px;
+  margin: 12px 0;
+}
+
+table {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+  border-collapse: collapse;
+}
+
+th {
+  background-color: #333333 !important;
+  color: #ffffff !important;
+  border: 1px solid #444444;
+  padding: 8px;
+}
+
+td {
+  border: 1px solid #444444 !important;
+  padding: 8px;
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+ul, ol {
+  color: #ffffff !important;
+}
+
+li {
+  color: #ffffff !important;
+}
+
+a {
+  color: #4dabf7 !important;
+}
+
+strong, b {
+  color: #ffffff !important;
+}
+
+em, i {
+  color: #cccccc !important;
+}
+
+/* Mermaid diagram styling for dark theme */
+.mermaid {
+  background-color: #2d2d2d !important;
+}
+
+.mermaid text {
+  fill: #ffffff !important;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  fill: #333333 !important;
+  stroke: #666666 !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: #ffffff !important;
+}
+
+.mermaid .edgeLabel {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+/* ===== OVERFLOW PREVENTION RULES ===== */
+
+/* General overflow prevention */
+section {
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Image overflow prevention */
+img {
+  max-width: 100% !important;
+  max-height: 80vh !important; /* Prevent images from taking more than 80% of viewport height */
+  height: auto !important;
+  width: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive image sizing */
+@media (max-width: 1280px) {
+  img {
+    max-width: 90% !important;
+    max-height: 70vh !important;
+  }
+}
+
+@media (max-width: 768px) {
+  img {
+    max-width: 85% !important;
+    max-height: 60vh !important;
+  }
+}
+
+/* Text overflow prevention */
+p, li, div {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+  line-height: 1.6 !important;
+}
+
+/* Long word handling */
+code, pre, .code {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+/* Table overflow prevention */
+table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  overflow-x: auto !important;
+  display: block !important;
+  max-width: 100% !important;
+}
+
+th, td {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: none !important;
+  white-space: normal !important;
+}
+
+/* Mermaid diagram overflow prevention */
+.mermaid {
+  max-width: 100% !important;
+  max-height: 70vh !important;
+  overflow: hidden !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+.mermaid svg {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Blockquote overflow prevention */
+blockquote {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Header overflow prevention */
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+  line-height: 1.2 !important;
+}
+
+/* List overflow prevention */
+ul, ol {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+li {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Container and layout fixes */
+section > * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevent horizontal scrolling */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Responsive text scaling */
+@media (max-width: 1280px) {
+  h1 { font-size: 2.5em !important; }
+  h2 { font-size: 2em !important; }
+  h3 { font-size: 1.5em !important; }
+  p, li { font-size: 0.9em !important; }
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 2em !important; }
+  h2 { font-size: 1.7em !important; }
+  h3 { font-size: 1.3em !important; }
+  p, li { font-size: 0.85em !important; }
+}
+
+/* Code block overflow fixes */
+pre {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+/* Link overflow prevention */
+a {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+  display: inline-block !important;
+}
+
+/* Ensure proper spacing and padding */
+section {
+  padding: 40px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 20px !important;
+  }
+}
+
+/* Additional overflow safeguards */
+* {
+  box-sizing: border-box !important;
+}
+
+section::before,
+section::after {
+  content: none !important;
+}
+
+/* Ensure no content breaks out of slide boundaries */
+section {
+  position: relative !important;
+  min-height: 100% !important;
+}
+
+/* Handle very long URLs or technical terms */
+.word-break-all {
+  word-break: break-all !important;
+}
+
+.word-break-word {
+  word-break: break-word !important;
+}
+
+/* Special handling for Mermaid diagram containers */
+.mermaid-container {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Prevent text selection issues that might cause layout problems */
+::selection {
+  background-color: rgba(77, 171, 247, 0.3) !important;
+}
+
+/* Ensure proper line spacing for readability */
+p, li {
+  margin-bottom: 0.8em !important;
+}
+
+/* Handle superscript and subscript properly */
+sup, sub {
+  font-size: 0.75em !important;
+  line-height: 0 !important;
+}
+
+/* Additional responsive breakpoints */
+@media (max-width: 1024px) {
+  section {
+    padding: 30px 50px !important;
+  }
+  h1 { font-size: 2.2em !important; }
+  h2 { font-size: 1.8em !important; }
+  h3 { font-size: 1.4em !important; }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 15px 25px !important;
+  }
+  h1 { font-size: 1.8em !important; }
+  h2 { font-size: 1.5em !important; }
+  h3 { font-size: 1.2em !important; }
+  p, li { font-size: 0.8em !important; }
+}

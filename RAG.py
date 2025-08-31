@@ -382,16 +382,85 @@ class StudyMaterialRAG:
 
         reference_content = "\n\n".join([doc.page_content for doc in results])
         print(reference_content)
+        
         chain = self.study_material_prompt | self.llm
 
         result = chain.invoke({
             "topic": query,
             "description": f"{topic.title} {' '.join(subtopics)}",
             "reference_content": reference_content,
+            "css_context": "Dark theme with overflow prevention - focus on mermaid diagrams",
             "teacher_id": teacher_id
         })
 
         return result.content
+
+    def _load_css_context(self) -> str:
+        """
+        Load the CSS context for the LLM to understand styling constraints.
+        
+        Returns:
+            String containing key CSS styling information
+        """
+        css_file_path = os.path.join(os.path.dirname(__file__), "assets", "dark-theme.css")
+        
+        try:
+            with open(css_file_path, "r", encoding="utf-8") as f:
+                css_content = f.read()
+            
+            # Extract key styling information for the LLM
+            css_context = f"""
+DARK THEME STYLING CONTEXT:
+
+Color Scheme:
+- Background: Dark gray (#1a1a1a)
+- Text: White (#ffffff)
+- Code blocks: Dark background (#2d2d2d) with light text (#f8f8f2)
+- Links: Blue (#4dabf7)
+- Accents: Blue (#007acc)
+
+Layout Constraints:
+- Slides are 16:9 aspect ratio (1280x720)
+- Content must fit within slide boundaries
+- Images max 100% width, 80% viewport height
+- Text uses overflow-wrap: break-word for long words
+- Maximum 8-12 bullet points per slide recommended
+
+Visual Elements:
+- Mermaid diagrams: Dark theme compatible
+- Tables: Dark background with light text
+- Blockquotes: Left border accent with dark background
+- Code blocks: Rounded corners, proper padding
+
+Content Guidelines:
+- Use white text on dark background
+- Ensure high contrast for readability
+- Keep content concise to fit slide boundaries
+- Use bullet points extensively
+- Include at least 1 image every 3-4 slides
+- Keep Mermaid diagrams under 800px width, 400px height
+
+Technical Constraints:
+- All content must be responsive
+- No horizontal scrolling allowed
+- Word wrapping enabled for long text
+- Images automatically center and scale
+"""
+            return css_context
+            
+        except FileNotFoundError:
+            print("Warning: CSS file not found, using default styling context")
+            return """
+DARK THEME STYLING CONTEXT:
+- Dark background (#1a1a1a) with white text (#ffffff)
+- Content must fit slide boundaries
+- Use bullet points, keep text concise
+- Include images and diagrams appropriately
+- Ensure readability on dark theme
+"""
+        except Exception as e:
+            print(f"Warning: Error loading CSS context: {e}")
+            return "Dark theme with white text, ensure content fits slides."
 
     def _parse_query_type(self, query: str) -> Tuple[str, Optional[str], Optional[str]]:
         """
