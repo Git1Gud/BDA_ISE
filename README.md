@@ -21,6 +21,15 @@ A comprehensive implementation of the QA-RAG (Question-Answering Retrieval-Augme
 - **Performance Analytics**: Comprehensive evaluation metrics and visualizations
 - **File Upload Support**: Easy PDF upload and processing
 
+### Logging & Monitoring
+- **Colored Console Logging**: Enhanced logging with color-coded messages
+  - 🟢 INFO: General information (green)
+  - 🟡 WARNING: Warnings and non-critical issues (yellow)
+  - 🔴 ERROR: Errors and exceptions (red)
+  - 🔵 DEBUG: Detailed debugging information (cyan)
+- **Structured Logging**: Consistent log format with timestamps and context
+- **Configurable Log Levels**: Adjust verbosity based on needs
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -59,7 +68,31 @@ python run_app.py
 
 6. **Open Browser**: Navigate to `http://localhost:8501`
 
-## 📖 Usage Guide
+## 📖 Usage
+
+### Colored Logging
+
+The system includes a comprehensive colored logging system for better debugging and monitoring:
+
+```python
+from logger import logger
+
+# Different log levels with colors
+logger.info("Application started successfully")      # Green
+logger.warning("Configuration issue detected")      # Yellow
+logger.error("Failed to process request")           # Red
+logger.debug("Processing step completed")           # Cyan
+```
+
+### Running the Application
+
+```bash
+# Run the main application
+python app.py
+
+# Test the logging system
+python test_logging.py
+``` Guide
 
 ### 1. System Initialization
 - Start the application and initialize the RAG system using the sidebar

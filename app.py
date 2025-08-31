@@ -1,105 +1,69 @@
 import os
-from RAG import StudyMaterialRAG
+from src import StudyMaterialRAG, RAGConfig
 import sys
 from material import generate_materials
 from prompts import Topic
+from logger import logger
 
 def main():
-    rag = StudyMaterialRAG()
+    """Main application entry point."""
+    logger.info("Starting Study Materials Generator")
 
-    syllabus = """
-    1 Title Introduction to Distributed Systems   
-    1.1 Definition, Goals, Types of Distributed Computing Models, Issues in 
-    Distributed Systems. 
-    
-    1.2 Hardware Concepts, Software Concepts, The Client-Server Model, 
-    Positioning Middleware, Models of Middleware, Services offered by 
-    Middleware.
-    """
-    # Add syllabus to the system
-    # rag.add_syllabus(syllabus, {"course_id": "C1", "teacher_id": "T1"})
+    try:
+        # Load environment variables first
+        from src.utils import EnvironmentManager
+        EnvironmentManager.load_environment()
 
-    # Add multiple reference documents to stress-test hybrid retrieval
-    reference_corpus = [
-        """
-        Virtualization allows abstraction of physical hardware resources. Hypervisors (Type 1 bare‑metal and Type 2 hosted)
-        manage guest operating systems. CPU scheduling, memory ballooning, and I/O device emulation enable consolidation.
-        """,
-        """
-        Containerization differs from full virtualization: lightweight process isolation using kernel namespaces and cgroups.
-        Docker image layering (AUFS/OverlayFS) supports efficient distribution. Registry caching accelerates CI/CD pipelines.
-        """,
-        """
-        Kubernetes orchestrates containers: scheduler assigns Pods based on resource requests; controller manager maintains desired state;
-        kube-proxy manages virtual IP based service discovery; etcd provides strongly consistent key-value store for cluster metadata.
-        """,
-        """
-        Resource pooling in cloud computing aggregates compute, storage, and network bandwidth to improve utilization.
-        Elastic scaling policies (target tracking, step scaling) respond to metrics like CPU, latency, or queue depth.
-        """,
-        """
-        Network virtualization introduces overlay networks (VXLAN, Geneve) decoupling logical topology from physical fabric,
-        enabling multi-tenant isolation. Virtual switches (OVS) enforce ACLs and QoS. Service mesh adds L7 traffic management.
-        """,
-        """
-        Hypervisor security hardening includes micro-segmentation, secure boot chains, encrypted VM images, and runtime integrity checks.
-        Side-channel mitigations (e.g., for speculative execution) can impact consolidation ratios and scheduling fairness.
-        """,
-        """
-        Container security scanning inspects image layers for CVEs; SBOM (Software Bill of Materials) supports provenance.
-        Runtime enforcement with seccomp, AppArmor, SELinux, and eBPF-based syscall profiling reduces attack surface.
-        """,
-        """
-        Serverless (FaaS) builds atop container or microVM isolation (Firecracker). Cold start latency reduced via snapshot/restore
-        and provisioned concurrency. Event-driven autoscaling differs from traditional request-per-second based triggers.
-        """,
-        """
-        Virtualization performance tuning: NUMA-aware placement, huge pages for TLB efficiency, SR-IOV for near line-rate networking,
-        paravirtualized drivers (virtio) reduce emulation overhead, and CPU pinning stabilizes latency-sensitive workloads.
-        """,
-        """
-        Advanced orchestration: topology-aware scheduling leverages zone / rack labels; descheduler evicts for rebalancing;
-        cluster autoscaler interacts with cloud APIs; vertical pod autoscaler adjusts resource requests over time.
-        """,
-    ]
-    # for idx, ref_text in enumerate(reference_corpus, start=1):
-    #     rag.add_reference_material(ref_text, {"source": f"RefDoc{idx}", "teacher_id": "T1"})
+        # Create RAG system with configuration
+        config = RAGConfig.from_env()
+        rag = StudyMaterialRAG(config)
+        logger.info("RAG system initialized successfully")
 
-    # Test different query types
-    # test_queries = ["module 1", "unit 1.2", "1.1", "middleware"]
-    
-    # for query in test_queries:
-    #     print(f"\n=== Testing query: {query} ===")
-    #     query_type, module_number, unit_number = rag._parse_query_type(query)
-    #     print(f"Parsed as: type={query_type}, module={module_number}, unit={unit_number}")
-        
-    #     topics_model = rag.extract_topics(query)
-    #     if topics_model and topics_model.topics:
-    #         filtered_topics = rag._filter_topics_by_query(
-    #             topics_model.topics, query_type, module_number, unit_number
-    #         )
-    #         print(f"Found {len(filtered_topics)} matching topics:")
-    #         for topic in filtered_topics:
-    #             print(f"  - Module {topic.module_number}, Unit {topic.unit_number}: {topic.title}")
-    #     else:
-    #         print("No topics found")
+        # Sample syllabus for testing
+        syllabus = """
+        1 Title Introduction to Distributed Systems
+        1.1 Definition, Goals, Types of Distributed Computing Models, Issues in
+        Distributed Systems.
 
-    # Use the original query for material generation
-    query = "unit 1.2"
-    results = rag.hybrid_search("reference", query, k_dense=8, k_sparse=24, k_final=10)
-    print("Hybrid results (reference):\n")
-    for i, d in enumerate(results, 1):
-        print(i, d.page_content[:120].replace('\\n',' ') + '...')
-    import time
-    topics_model = rag.extract_topics("unit 1.2")  # Test unit query
-    if topics_model and topics_model.topics:
-        first_topic = topics_model.topics[0]
-        print("First topic:", first_topic.title, first_topic.subtopics)
-        time.sleep(2)
-        material = generate_materials(query, teacher_id="T1")
-        # generate_materials(material)
-        # print("\nGenerated study material (first 500 chars):\n", material)
+        1.2 Hardware Concepts, Software Concepts, The Client-Server Model,
+        Positioning Middleware, Models of Middleware, Services offered by
+        Middleware.
+        """
 
+        # Test query
+        query = "unit 1.2"
+        logger.info(f"Processing query: {query}")
+
+        # Perform hybrid search
+        logger.info("Performing hybrid search...")
+        results = rag.hybrid_search("reference", query, k_dense=8, k_sparse=24, k_final=10)
+        logger.info(f"Hybrid search completed. Found {len(results)} results")
+
+        for i, d in enumerate(results, 1):
+            logger.debug(f"Result {i}: {d.page_content[:120].replace(chr(10),' ')}...")
+
+        # Extract topics and generate materials
+        logger.info("Extracting topics...")
+        topics_model = rag.extract_topics(query)
+
+        if topics_model and topics_model.topics:
+            first_topic = topics_model.topics[0]
+            logger.info(f"First topic: {first_topic.title}")
+            logger.debug(f"Subtopics: {first_topic.subtopics}")
+
+            try:
+                logger.info("Generating study materials...")
+                material = generate_materials(query, teacher_id="T1")
+                logger.info("Material generation completed successfully")
+            except Exception as e:
+                logger.error(f"Error generating materials: {e}")
+                raise
+        else:
+            logger.warning("No topics found")
+
+    except Exception as e:
+        logger.error(f"Application error: {e}")
+        raise
 
 if __name__ == "__main__":
     main()
