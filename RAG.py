@@ -39,7 +39,8 @@ class RAGConfig:
     qdrant_api_key: Optional[str] = None
     qdrant_url: Optional[str] = None
     gemini_api_key: Optional[str] = None
-    model_name: str = "llama3-8b-8192"
+    provider: str = "google"
+    model_name: str = "gemini-2.5-pro"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     syllabus_collection: str = "syllabus"
     reference_collection: str = "references"
@@ -50,11 +51,22 @@ class RAGConfig:
     @classmethod
     def from_env(cls) -> 'RAGConfig':
         """Create config from environment variables."""
+        # Optional fallback to global app config
+        try:
+            from config import config as app_config  # type: ignore
+        except Exception:
+            app_config = None
+
+        def _get(name: str, default: Optional[str] = None):
+            return os.getenv(name) or (getattr(app_config, name, None) if app_config else None) or default
+
         return cls(
-            groq_api_key=os.getenv("GROQ_API_KEY"),
-            qdrant_api_key=os.getenv("QDRANT_API_KEY"),
-            qdrant_url=os.getenv("QDRANT_URL"),
-            gemini_api_key=os.getenv("GEMINI_API_KEY")
+            groq_api_key=_get("GROQ_API_KEY"),
+            qdrant_api_key=_get("QDRANT_API_KEY"),
+            qdrant_url=_get("QDRANT_URL"),
+            gemini_api_key=_get("GEMINI_API_KEY"),
+            provider=_get("PROVIDER", "google"),
+            model_name=_get("MODEL_NAME", "gemini-2.5-pro"),
         )
 
 class StudyMaterialRAG:
@@ -65,14 +77,25 @@ class StudyMaterialRAG:
 
     def _setup_components(self) -> None:
         """Initialize all RAG components."""
-        self.llm = ChatGoogleGenerativeAI(
-            model='gemini-2.5-pro',
-            temperature=0,
-            max_tokens=None,
-            timeout=None,
-            max_retries=2,
-            api_key=self.config.gemini_api_key,
-        )
+        provider = (self.config.provider or "google").lower()
+        model_name = self.config.model_name or ("gemini-2.5-pro" if provider == "google" else "llama3-8b-8192")
+        if provider == "google":
+            self.llm = ChatGoogleGenerativeAI(
+                model=model_name,
+                temperature=0,
+                max_tokens=None,
+                timeout=None,
+                max_retries=2,
+                api_key=self.config.gemini_api_key,
+            )
+        elif provider == "groq":
+            self.llm = ChatGroq(
+                model_name=model_name,
+                temperature=0,
+                api_key=self.config.groq_api_key,
+            )
+        else:
+            raise ValueError(f"Unsupported provider: {provider}")
 
         self.embeddings = HuggingFaceEmbeddings(model_name=self.config.embedding_model)
 

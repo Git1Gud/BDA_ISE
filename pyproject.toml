@@ -9,6 +9,7 @@ dependencies = [
     "flask>=3.1.2",
     "flask-cors>=6.0.1",
     "groq>=0.31.0",
+    "huggingface-hub>=0.34.4",
     "langchain>=0.3.27",
     "langchain-google-genai>=2.1.9",
     "langchain-groq>=0.3.7",
@@ -16,6 +17,7 @@ dependencies = [
     "langchain-qdrant>=0.2.0",
     "matplotlib>=3.10.6",
     "pandas>=2.3.2",
+    "pip>=25.2",
     "plotly>=6.3.0",
     "pydantic>=2.11.7",
     "pypdf2>=3.0.1",
@@ -26,3 +28,6 @@ dependencies = [
     "sentence-transformers>=5.1.0",
     "streamlit>=1.48.1",
 ]
+
+[[tool.uv.index]]
+url = "https://abetlen.github.io/llama-cpp-python/whl/cu124"

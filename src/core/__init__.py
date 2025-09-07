@@ -13,7 +13,8 @@ class RAGConfig:
     qdrant_api_key: Optional[str] = None
     qdrant_url: Optional[str] = None
     gemini_api_key: Optional[str] = None
-    model_name: str = "llama3-8b-8192"
+    provider: str = "google"
+    model_name: str = "gemini-2.5-pro"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     syllabus_collection: str = "syllabus"
     reference_collection: str = "references"
@@ -25,11 +26,28 @@ class RAGConfig:
     def from_env(cls) -> 'RAGConfig':
         """Create config from environment variables."""
         import os
+        # Optional fallback to global Config constants if present
+        try:
+            from config import config as app_config  # type: ignore
+        except Exception:
+            app_config = None
+
+        def _get(name: str, default: Optional[str] = None):
+            return os.getenv(name) or (getattr(app_config, name, None) if app_config else None) or default
+
         return cls(
-            groq_api_key=os.getenv("GROQ_API_KEY"),
-            qdrant_api_key=os.getenv("QDRANT_API_KEY"),
-            qdrant_url=os.getenv("QDRANT_URL"),
-            gemini_api_key=os.getenv("GEMINI_API_KEY")
+            groq_api_key=_get("GROQ_API_KEY"),
+            qdrant_api_key=_get("QDRANT_API_KEY"),
+            qdrant_url=_get("QDRANT_URL"),
+            gemini_api_key=_get("GEMINI_API_KEY"),
+            provider=_get("PROVIDER", "google"),
+            model_name=_get("MODEL_NAME", "gemini-2.5-pro"),
+            embedding_model=_get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+            syllabus_collection=_get("SYLLABUS_COLLECTION", "syllabus"),
+            reference_collection=_get("REFERENCE_COLLECTION", "references"),
+            syllabus_chunk_size=int(_get("SYLLABUS_CHUNK_SIZE", "500")),
+            reference_chunk_size=int(_get("REFERENCE_CHUNK_SIZE", "1000")),
+            chunk_overlap=int(_get("CHUNK_OVERLAP", "100")),
         )
 
 class BaseRAGComponent:

@@ -5,6 +5,7 @@ Main RAG system that orchestrates all components.
 import time
 from typing import List, Dict, Any, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_qdrant import QdrantVectorStore
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.output_parsers import PydanticOutputParser
@@ -51,15 +52,28 @@ class StudyMaterialRAG(BaseRAGComponent):
     def _setup_llm(self):
         """Initialize the language model."""
         try:
-            self.llm = ChatGoogleGenerativeAI(
-                model='gemini-2.5-pro',
-                temperature=0,
-                max_tokens=None,
-                timeout=None,
-                max_retries=2,
-                api_key=self.config.gemini_api_key,
-            )
-            self._log_operation("LLM initialized", "gemini-2.5-pro")
+            provider = (self.config.provider or "google").lower()
+            model_name = self.config.model_name or ("gemini-2.5-pro" if provider == "google" else "llama3-8b-8192")
+
+            if provider == "google":
+                self.llm = ChatGoogleGenerativeAI(
+                    model=model_name,
+                    temperature=0,
+                    max_tokens=None,
+                    timeout=None,
+                    max_retries=2,
+                    api_key=self.config.gemini_api_key,
+                )
+            elif provider == "groq":
+                self.llm = ChatGroq(
+                    model_name=model_name,
+                    temperature=0,
+                    api_key=self.config.groq_api_key,
+                )
+            else:
+                raise ValueError(f"Unsupported provider: {provider}")
+
+            self._log_operation("LLM initialized", f"{provider}:{model_name}")
         except Exception as e:
             self._log_error("LLM initialization", e)
             raise

@@ -13,8 +13,10 @@ class Config:
     QDRANT_URL: Optional[str] = os.getenv("QDRANT_URL")
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
 
-    # Model settings
-    MODEL_NAME: str = "llama3-8b-8192"
+    # LLM settings
+    # Provider can be: 'google' (Gemini via langchain_google_genai) or 'groq' (Groq via langchain_groq)
+    PROVIDER: str = os.getenv("PROVIDER", "google")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-2.5-pro")
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Collection names
