@@ -24,18 +24,22 @@ st.markdown("Upload a syllabus and reference PDF, enter a topic or unit, and get
 # --- Session State Initialization ---
 if 'rag_system' not in st.session_state:
     st.session_state.rag_system = None
+if 'llm_provider' not in st.session_state:
+    st.session_state.llm_provider = "gemini" # Default provider
 
 # --- Helper Functions ---
-def initialize_rag_system():
+def initialize_rag_system(provider_name):
     """Initializes the RAG system and stores it in the session state."""
-    if st.session_state.rag_system is None:
-        with st.spinner("Initializing RAG System... This may take a moment."):
+    if st.session_state.rag_system is None or st.session_state.llm_provider != provider_name:
+        with st.spinner(f"Initializing RAG System with {provider_name.capitalize()}... This may take a moment."):
             try:
                 from src.utils import EnvironmentManager
                 EnvironmentManager.load_environment()
                 config = RAGConfig.from_env()
+                config.provider = provider_name # Set the provider
                 st.session_state.rag_system = StudyMaterialRAG(config)
-                logger.info("RAG system initialized successfully for Streamlit app.")
+                st.session_state.llm_provider = provider_name
+                logger.info(f"RAG system initialized successfully with {provider_name} for Streamlit app.")
             except Exception as e:
                 st.error(f"Failed to initialize RAG system: {e}")
                 logger.error(f"Streamlit RAG initialization failed: {e}")
@@ -104,7 +108,27 @@ def generate_content_quality_report(analysis_results):
     return report
 
 # --- Main App ---
-initialize_rag_system()
+# LLM Provider Selection
+with st.sidebar:
+    st.header("LLM Provider")
+    
+    # Load available providers from config
+    try:
+        from llm_config import PROVIDER as default_provider
+    except ImportError:
+        default_provider = "gemini"
+    
+    provider_options = ["Gemini", "Llama (Local)"]
+    provider_display = "Gemini" if default_provider.lower() == "gemini" else "Llama (Local)"
+    
+    provider = st.radio(
+        "Choose your LLM provider:",
+        provider_options,
+        index=provider_options.index(provider_display)
+    )
+    provider_name = "gemini" if provider == 'Gemini' else "llama"
+
+initialize_rag_system(provider_name)
 
 # Create tabs
 tab1, tab2 = st.tabs(["📝 Generate Materials", "🔬 Advanced Analysis"])

@@ -15,6 +15,7 @@ class RAGConfig:
     gemini_api_key: Optional[str] = None
     provider: str = "google"
     model_name: str = "gemini-2.5-pro"
+    model_path: str = "models/llama-2-7b-chat.Q4_K_M.gguf"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     syllabus_collection: str = "syllabus"
     reference_collection: str = "references"
@@ -42,6 +43,7 @@ class RAGConfig:
             gemini_api_key=_get("GEMINI_API_KEY"),
             provider=_get("PROVIDER", "google"),
             model_name=_get("MODEL_NAME", "gemini-2.5-pro"),
+            model_path=_get("MODEL_PATH", "models/llama-2-7b-chat.Q4_K_M.gguf"),
             embedding_model=_get("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
             syllabus_collection=_get("SYLLABUS_COLLECTION", "syllabus"),
             reference_collection=_get("REFERENCE_COLLECTION", "references"),

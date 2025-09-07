@@ -16,7 +16,8 @@ class Config:
     # LLM settings
     # Provider can be: 'google' (Gemini via langchain_google_genai) or 'groq' (Groq via langchain_groq)
     PROVIDER: str = os.getenv("PROVIDER", "google")
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-2.5-pro")
+    MODEL_NAME: str = os.getenv("MODEL_NAME", "gemini-2.5-flash-lite")
+    MODEL_PATH: str = os.getenv("MODEL_PATH")
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Collection names

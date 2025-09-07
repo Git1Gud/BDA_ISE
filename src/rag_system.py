@@ -52,19 +52,22 @@ class StudyMaterialRAG(BaseRAGComponent):
     def _setup_llm(self):
         """Initialize the language model."""
         try:
-            provider = (self.config.provider or "google").lower()
-            model_name = self.config.model_name or ("gemini-2.5-pro" if provider == "google" else "llama3-8b-8192")
-
-            if provider == "google":
-                self.llm = ChatGoogleGenerativeAI(
-                    model=model_name,
-                    temperature=0,
-                    max_tokens=None,
-                    timeout=None,
-                    max_retries=2,
-                    api_key=self.config.gemini_api_key,
-                )
+            from llm_provider import get_provider
+            
+            # Use the provider from config, fallback to environment
+            provider = (self.config.provider or "gemini").lower()
+            
+            if provider == "llama":
+                self.llm = get_provider("llama", model_path=self.config.model_path)
+                model_name = self.config.model_path.split('/')[-1]
+            elif provider in ["gemini", "google"]:
+                self.llm = get_provider("gemini", 
+                                       api_key=self.config.gemini_api_key,
+                                       model_name=self.config.model_name)
+                model_name = self.config.model_name or "gemini-pro"
             elif provider == "groq":
+                from langchain_groq import ChatGroq
+                model_name = self.config.model_name or "llama3-8b-8192"
                 self.llm = ChatGroq(
                     model_name=model_name,
                     temperature=0,

@@ -1,24 +1,19 @@
-from llm_provider import get_provider
-
-# provider_name = "llama"  # or "gemini"
-provider_name = "llama"
-
-llm_provider = get_provider(
-    provider_name,
-    model_path="models/llama-2-7b-chat.Q4_K_M.gguf" # Only for llama
+from llama_cpp import Llama
+llm = Llama(
+      model_path="models\llama-2-7b-chat.Q4_K_M.gguf",
+      chat_format="llama-2",
+      n_gpu_layers=-1,
+      n_ctx=4096
 )
 
-messages = [
-    {"role": "system", "content": "You are an assistant who creates study material."},
-    {
-        "role": "user",
-        "content": "What is system design."
-    }
-]
-
-response = llm_provider.create_chat_completion(
-    messages=messages,
-    max_tokens=2096
+response = llm.create_chat_completion(
+      messages = [
+          {"role": "system", "content": "You are an assistant who creates study material."},
+          {
+              "role": "user",
+              "content": "Give me a mermiad diagram of a simple client and server architecture."
+          }
+      ],
+      max_tokens=512  # Increase this value for longer answers
 )
-
-print(response)
+print(response["choices"][0]["message"]["content"])
