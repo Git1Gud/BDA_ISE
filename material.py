@@ -1,4 +1,6 @@
 import os
+import json
+import shutil
 from src import StudyMaterialRAG
 from typing import Optional
 from config import config
@@ -59,6 +61,42 @@ def fix_mermaid_syntax(content):
             fixed_lines.append(line)
     
     return '\n'.join(fixed_lines)
+
+def _ensure_puppeteer_config() -> str:
+    """Create a puppeteer-config.json with no-sandbox flags and return its path.
+
+    Required to run headless Chromium inside root/Kaggle containers.
+    Safe to use on local machines too.
+    """
+    cfg = {
+        "headless": "new",
+        "args": [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--single-process",
+        ],
+    }
+
+    # Try a few common Chrome/Chromium paths (useful on Linux/Kaggle)
+    candidates = [
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+    ]
+    exe = next((p for p in candidates if os.path.exists(p)), None)
+    if exe:
+        cfg["executablePath"] = exe
+
+    cfg_path = os.path.join(os.getcwd(), "puppeteer-config.json")
+    try:
+        with open(cfg_path, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Failed to write puppeteer-config.json: {e}")
+    return cfg_path
 
 def validate_mermaid_syntax(content):
     """
@@ -213,26 +251,41 @@ style: |
                 
                 f.write(clean_content)
                 f.write("\n\n")
-        os.system(f" mmdc -i {file_path} -o {file_path} ")
+        # Render Mermaid diagrams if Mermaid CLI is available.
+        # Use Puppeteer config with no-sandbox flags for Kaggle/root.
+        pptr_cfg = _ensure_puppeteer_config()
+        if shutil.which("mmdc"):
+            os.system(f"mmdc -i \"{file_path}\" -o \"{file_path}\" -p \"{pptr_cfg}\"")
+        else:
+            logger.info("Mermaid CLI (mmdc) not found; skipping diagram pre-rendering.")
         # Generate the PDF, PPTX, or HTML files in 'uploads' directory
         if output_format in ['pptx', 'ppt']:
             pptx_file = f"{topic_clean}_slides.pptx"
             pptx_path = os.path.join(os.getcwd(), upload_folder, pptx_file)
-            os.system(f"marp --allow-local-files {file_path} --pptx -o {pptx_path}")
+            os.system(
+                f"marp --allow-local-files \"{file_path}\" --pptx -o \"{pptx_path}\" "
+                f"--puppeteer-chromium-args=\"--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --single-process\""
+            )
             logger.info(f"PPTX file generated at: {pptx_path}")
             return pptx_path
 
         elif output_format == 'pdf':
             pdf_file = f"{topic_clean}_materials.pdf"
             pdf_path = os.path.join(os.getcwd(), upload_folder, pdf_file)
-            os.system(f"marp --allow-local-files {file_path} --pdf -o {pdf_path}")
+            os.system(
+                f"marp --allow-local-files \"{file_path}\" --pdf -o \"{pdf_path}\" "
+                f"--puppeteer-chromium-args=\"--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --single-process\""
+            )
             logger.info(f"PDF file generated at: {pdf_path}")
             return pdf_path
 
         elif output_format == 'html':
             html_file = f"{topic_clean}.html"
             html_path = os.path.join(os.getcwd(), upload_folder, html_file)
-            os.system(f"marp --allow-local-files {file_path} --html -o {html_path}")
+            os.system(
+                f"marp --allow-local-files \"{file_path}\" --html -o \"{html_path}\" "
+                f"--puppeteer-chromium-args=\"--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --disable-gpu --single-process\""
+            )
             logger.info(f"HTML file generated at: {html_path}")
             return html_path
 
