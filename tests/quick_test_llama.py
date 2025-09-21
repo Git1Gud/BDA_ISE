@@ -11,7 +11,7 @@ response = llm.create_chat_completion(
           {"role": "system", "content": "You are an assistant who creates study material."},
           {
               "role": "user",
-              "content": "Give me a mermiad diagram of a simple client and server architecture."
+              "content": "Give me a mermiad diagram code of a simple client and server architecture."
           }
       ],
       max_tokens=512  # Increase this value for longer answers

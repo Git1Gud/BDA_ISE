@@ -1,7 +1,9 @@
 """
 A module for providing different LLM implementations.
+Adds logging around Llama generations so you can see when queries are generated.
 """
 import os
+import time
 from abc import ABC, abstractmethod
 from llama_cpp import Llama
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -9,6 +11,7 @@ from langchain_core.language_models.llms import LLM
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from typing import Any, List, Optional
 from dotenv import load_dotenv
+from logger import logger
 
 # Load environment variables
 load_dotenv()
@@ -55,15 +58,23 @@ class LangChainLlamaWrapper(LLM):
         **kwargs: Any,
     ) -> str:
         """Run the LLM on the given prompt."""
+        def _preview(txt: str, limit: int = 300) -> str:
+            return txt if len(txt) <= limit else txt[:limit] + "..."
+
         messages = [{"role": "user", "content": prompt}]
-        
+
+        logger.info("LLM[llama] generation started; input preview: %s", _preview(prompt))
+        t0 = time.perf_counter()
         response = self._llm.create_chat_completion(
             messages=messages,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             stop=stop
         )
-        return response["choices"][0]["message"]["content"]
+        out = response["choices"][0]["message"]["content"]
+        dur = time.perf_counter() - t0
+        logger.info("LLM[llama] generation finished in %.2fs; output preview: %s", dur, _preview(out))
+        return out
 
 class LLMProvider(ABC):
     """Abstract base class for a LLM provider."""
@@ -74,7 +85,7 @@ class LLMProvider(ABC):
 
 class LlamaProvider(LLMProvider):
     """Provider for the local Llama model."""
-    def __init__(self, model_path=MODEL_PATH, chat_format="llama-2", n_gpu_layers=-1, n_ctx=4096):
+    def __init__(self, model_path=MODEL_PATH, chat_format="llama-2", n_gpu_layers=1, n_ctx=4096):
         self.llm = Llama(
             model_path=model_path,
             chat_format=chat_format,
@@ -83,11 +94,21 @@ class LlamaProvider(LLMProvider):
         )
 
     def create_chat_completion(self, messages, max_tokens=MAX_TOKENS):
+        # Log a short preview of the last user message
+        user_msg = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
+        preview = user_msg if len(user_msg) <= 300 else user_msg[:300] + "..."
+        logger.info("LLM[llama] generation started; input preview: %s", preview)
+
+        t0 = time.perf_counter()
         response = self.llm.create_chat_completion(
             messages=messages,
             max_tokens=max_tokens
         )
-        return response["choices"][0]["message"]["content"]
+        out = response["choices"][0]["message"]["content"]
+        dur = time.perf_counter() - t0
+        out_preview = out if len(out) <= 300 else out[:300] + "..."
+        logger.info("LLM[llama] generation finished in %.2fs; output preview: %s", dur, out_preview)
+        return out
 
 class GeminiProvider(LLMProvider):
     """Provider for Google Gemini using LangChain."""
